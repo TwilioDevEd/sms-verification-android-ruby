@@ -21,9 +21,8 @@ module SmsVerification
 
     # Initialize the Twilio Client
     @@twilio_client = Twilio::REST::Client.new(
-      Config.twilio_api_key,
-      Config.twilio_api_secret,
-      Config.twilio_account_sid
+      Config.twilio_account_sid,
+      Config.twilio_auth_token
     )
 
     @@sms_verify = SmsVerify.new(
@@ -52,7 +51,8 @@ module SmsVerification
 
       @@sms_verify.request(phone)
 
-      return {
+      content_type :json
+      {
         success: true,
         time: @@sms_verify.expiration_interval
       }.to_json
@@ -75,12 +75,14 @@ module SmsVerification
       end
 
       if @@sms_verify.verify_sms(phone, sms_message)
-        return {
+        content_type :json
+        {
           success: true,
           phone: phone
         }.to_json
       else
-        return {
+        content_type :json
+        {
           success: false,
           message: 'Unable to validate code for this phone number'
         }.to_json
@@ -103,12 +105,14 @@ module SmsVerification
       end
 
       if @@sms_verify.reset(phone)
-        return {
+        content_type :json
+        {
           success: true,
           phone: phone
         }.to_json
       else
-        return {
+        content_type :json
+        {
           success: false,
           message: 'Unable to reset code for this phone number'
         }.to_json

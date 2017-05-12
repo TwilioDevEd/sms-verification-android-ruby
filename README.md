@@ -24,17 +24,10 @@ You will need all of these values before you continue.
 | Config Value  | Description |
 | :-------------  |:------------- |
 `TWILIO_ACCOUNT_SID` | Your primary Twilio account identifier - find this [in the console here](https://www.twilio.com/console).
-`TWILIO_API_KEY` | Used to authenticate - [generate one here](https://www.twilio.com/console/dev-tools/api-keys).
-`TWILIO_API_SECRET` | Used to authenticate - [just like the above, you'll get one here](https://www.twilio.com/console/dev-tools/api-keys).
+`TWILIO_AUTH_TOKEN` | Used to authenticate - [just like the above, you'll get one here](https://www.twilio.com/console).
 `SENDING_PHONE_NUMBER` | This phone number will be sending the SMS messages to the Android device. Either use a phone number you purchased through Twilio, or one you have verified with your account.
 `APP_HASH` | Matches the Android application to the SMS message - get this from the Settings menu item in the Android application.
 `CLIENT_SECRET` | Matches the Android application to the server - you can set this in the `strings.xml` file in your Android application. It must match the server's config value. You can also override it in the Settings menu of the app.
-
-#### A Note on API Keys
-
-When you generate an API key pair at the URLs above, your API Secret will only
-be shown once - make sure to save this information in a secure location, or
-possibly your `~/.bash_profile`.
 
 ## Run the sample application
 

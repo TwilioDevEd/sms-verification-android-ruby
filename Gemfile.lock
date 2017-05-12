@@ -3,12 +3,14 @@ GEM
   specs:
     builder (3.2.3)
     dotenv (2.2.1)
+    faraday (0.12.1)
+      multipart-post (>= 1.2, < 3)
     jwt (1.5.6)
     mini_cache (1.1.0)
     minitest (5.10.1)
     minitest-assert-json-equal (0.2.1)
       minitest (~> 5.0)
-    multi_json (1.12.1)
+    multipart-post (2.0.0)
     mustermann (1.0.0)
     rack (2.0.2)
     rack-parser (0.7.0)
@@ -22,10 +24,10 @@ GEM
       rack-protection (= 2.0.0)
       tilt (~> 2.0)
     tilt (2.0.7)
-    twilio-ruby (4.13.0)
+    twilio-ruby (5.0.0.rc19)
       builder (>= 2.1.2)
+      faraday (~> 0.9)
       jwt (~> 1.0)
-      multi_json (>= 1.3.0)
 
 PLATFORMS
   ruby
@@ -38,7 +40,7 @@ DEPENDENCIES
   rack-parser
   rake
   sinatra
-  twilio-ruby
+  twilio-ruby (~> 5.0.0.rc19)
 
 BUNDLED WITH
    1.14.6
