@@ -3,7 +3,7 @@ require 'mini_cache'
 class SmsVerify
   attr_reader :cache, :twilio_client, :sender_phone_number, :app_hash, :expiration_interval
 
-  def initialize(twilio_client, sender_phone_number, app_hash, expiration_interval=900)
+  def initialize(twilio_client, sender_phone_number, app_hash, expiration_interval = 900)
     @cache = MiniCache::Store.new
     @twilio_client = twilio_client
     @sender_phone_number = sender_phone_number
@@ -38,12 +38,12 @@ class SmsVerify
     puts "Verifying #{phone}: #{sms_message}"
     otp = @cache.get(phone)
 
-    if (otp == nil)
+    unless otp
       puts "No cached otp value found for phone: #{phone}"
       return false
     end
 
-    if (sms_message.index otp.to_s)
+    if (sms_message.include? otp.to_s)
       puts 'Found otp value in cache'
       return true
     end

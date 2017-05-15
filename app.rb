@@ -1,5 +1,6 @@
 require 'bundler'
 require 'sinatra'
+require 'sinatra/json'
 require 'twilio-ruby'
 require 'rack/parser'
 
@@ -38,7 +39,7 @@ module SmsVerification
       client_secret = params['client_secret']
       phone = params['phone']
 
-      if client_secret == nil || phone == nil
+      unless client_secret && phone
         # send an error saying that both client_secret and phone are required
         status 400
         return 'Both client_secret and phone are required.'
@@ -51,11 +52,7 @@ module SmsVerification
 
       @@sms_verify.request(phone)
 
-      content_type :json
-      {
-        success: true,
-        time: @@sms_verify.expiration_interval
-      }.to_json
+      json success: true, time: @@sms_verify.expiration_interval
     end
 
     post '/api/verify' do
@@ -63,7 +60,7 @@ module SmsVerification
       phone = params['phone']
       sms_message = params['sms_message']
 
-      if client_secret == nil || phone == nil || sms_message == nil
+      unless client_secret && phone && sms_message
         # send an error saying that both client_secret and phone are required
         status 400
         return 'The client_secret, phone, and sms_message are required.'
@@ -75,17 +72,10 @@ module SmsVerification
       end
 
       if @@sms_verify.verify_sms(phone, sms_message)
-        content_type :json
-        {
-          success: true,
-          phone: phone
-        }.to_json
+        json success: true, phone: phone
       else
-        content_type :json
-        {
-          success: false,
-          message: 'Unable to validate code for this phone number'
-        }.to_json
+        json success: false,
+             message: 'Unable to validate code for this phone number'
       end
     end
 
@@ -93,7 +83,7 @@ module SmsVerification
       client_secret = params['client_secret']
       phone = params['phone']
 
-      if client_secret == nil || phone == nil
+      unless client_secret && phone
         # send an error saying that both client_secret and phone are required
         status 400
         return 'Both client_secret and phone are required.'
@@ -105,17 +95,10 @@ module SmsVerification
       end
 
       if @@sms_verify.reset(phone)
-        content_type :json
-        {
-          success: true,
-          phone: phone
-        }.to_json
+        json success: true, phone: phone
       else
-        content_type :json
-        {
-          success: false,
-          message: 'Unable to reset code for this phone number'
-        }.to_json
+        json success: false, 
+             message: 'Unable to reset code for this phone number'
       end
     end
   end

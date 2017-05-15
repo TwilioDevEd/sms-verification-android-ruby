@@ -39,13 +39,13 @@ class SmsVerificationTest < Minitest::Test
 
   def test_request_code_with_missing_parameter
     # Act
-    post '/api/request', :client_secret => 'secret'
+    post '/api/request', client_secret: 'secret'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'Both client_secret and phone are required.', last_response.body
 
     # Act
-    post '/api/request', :phone => '+15550421337'
+    post '/api/request', phone: '+15550421337'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'Both client_secret and phone are required.', last_response.body
@@ -53,7 +53,7 @@ class SmsVerificationTest < Minitest::Test
 
   def test_request_code_with_invalid_secret
     # Act
-    post '/api/request', :client_secret => 'lol', :phone => '+15550421337'
+    post '/api/request', client_secret: 'lol', phone: '+15550421337'
 
     # Assert
     assert_equal 400, last_response.status
@@ -62,10 +62,10 @@ class SmsVerificationTest < Minitest::Test
 
   def test_request_code_with_correct_parameter
     # Act
-    post '/api/request', :client_secret => 'secret', :phone => '+15550421337'
+    post '/api/request', client_secret: 'secret', phone: '+15550421337'
 
     # Assert
-    assert_equal 200, last_response.status
+    assert last_response.ok?
     assert_json_equal last_response.body, {success: true, time: 900}.to_json
   end
 
@@ -83,19 +83,19 @@ class SmsVerificationTest < Minitest::Test
 
   def test_verify_code_with_missing_parameter
     # Act
-    post '/api/verify', :client_secret => 'secret'
+    post '/api/verify', client_secret: 'secret'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
 
     # Act
-    post '/api/verify', :phone => '+15550421337'
+    post '/api/verify', phone: '+15550421337'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
 
     # Act
-    post '/api/verify', :sms_message => 'fake sms'
+    post '/api/verify', sms_message: 'fake sms'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
@@ -103,8 +103,8 @@ class SmsVerificationTest < Minitest::Test
 
   def test_verify_code_with_invalid_secret
     # Act
-    post '/api/verify', :client_secret => 'lol', :phone => '+15550421337', 
-      :sms_message => 'fake sms'
+    post '/api/verify', client_secret: 'lol', phone: '+15550421337', 
+      sms_message: 'fake sms'
 
     # Assert
     assert_equal 400, last_response.status
@@ -116,11 +116,11 @@ class SmsVerificationTest < Minitest::Test
     @verify_sms_returns = true
 
     # Act
-    post '/api/verify', :client_secret => 'secret', :phone => '+15550421337', 
-      :sms_message => 'fake sms'
+    post '/api/verify', client_secret: 'secret', phone: '+15550421337', 
+      sms_message: 'fake sms'
 
     # Assert
-    assert_equal 200, last_response.status
+    assert last_response.ok?
     assert_json_equal last_response.body, {success: true, phone: '+15550421337'}.to_json
   end
 
@@ -129,11 +129,11 @@ class SmsVerificationTest < Minitest::Test
     @verify_sms_returns = false
 
     # Act
-    post '/api/verify', :client_secret => 'secret', :phone => '+15550421337', 
-      :sms_message => 'fake sms'
+    post '/api/verify', client_secret: 'secret', phone: '+15550421337', 
+      sms_message: 'fake sms'
 
     # Assert
-    assert_equal 200, last_response.status
+    assert last_response.ok?
     assert_json_equal last_response.body, {success: false, message: 'Unable to validate code for this phone number'}.to_json
   end
 
@@ -151,13 +151,13 @@ class SmsVerificationTest < Minitest::Test
 
   def test_reset_code_with_missing_parameter
     # Act
-    post '/api/reset', :client_secret => 'secret'
+    post '/api/reset', client_secret: 'secret'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'Both client_secret and phone are required.', last_response.body
 
     # Act
-    post '/api/reset', :phone => '+15550421337'
+    post '/api/reset', phone: '+15550421337'
     # Assert
     assert_equal 400, last_response.status
     assert_equal 'Both client_secret and phone are required.', last_response.body
@@ -165,7 +165,7 @@ class SmsVerificationTest < Minitest::Test
 
   def test_reset_code_with_invalid_secret
     # Act
-    post '/api/reset', :client_secret => 'lol', :phone => '+15550421337'
+    post '/api/reset', client_secret: 'lol', phone: '+15550421337'
 
     # Assert
     assert_equal 400, last_response.status
@@ -177,10 +177,10 @@ class SmsVerificationTest < Minitest::Test
     @reset_returns = true
 
     # Act
-    post '/api/reset', :client_secret => 'secret', :phone => '+15550421337'
+    post '/api/reset', client_secret: 'secret', phone: '+15550421337'
 
     # Assert
-    assert_equal 200, last_response.status
+    assert last_response.ok?
     assert_json_equal last_response.body, {success: true, phone: '+15550421337'}.to_json
   end
 
@@ -189,10 +189,10 @@ class SmsVerificationTest < Minitest::Test
     @reset_returns = false
 
     # Act
-    post '/api/reset', :client_secret => 'secret', :phone => '+15550421337'
+    post '/api/reset', client_secret: 'secret', phone: '+15550421337'
 
     # Assert
-    assert_equal 200, last_response.status
+    assert last_response.ok?
     assert_json_equal last_response.body, {success: false, message: 'Unable to reset code for this phone number'}.to_json
   end
 end
