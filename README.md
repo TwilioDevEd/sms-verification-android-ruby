@@ -1,3 +1,7 @@
+<a href="https://www.twilio.com">
+  <img src="https://static0.twilio.com/marketing/bundles/marketing/img/logos/wordmark-red.svg" alt="Twilio" width="250" />
+</a>
+
 # SMS Verification for Android - Server for Ruby and Sinatra
 
 This sample project demonstrates how to use Twilio's SMS Messaging APIs to
