@@ -12,4 +12,5 @@ group :test do
   gem "rake"
   gem "minitest"
   gem 'minitest-assert-json-equal'
+  gem 'rack-test'
 end

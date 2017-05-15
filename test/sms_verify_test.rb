@@ -16,9 +16,7 @@ class SmsVerifyTest < Minitest::Test
   end
 
   def setup
-    if not defined? @cache
-      @cache = Minitest::Mock.new
-    end
+    @cache ||= Minitest::Mock.new
     @sms_verify = SmsVerify.new @twilio_client, @sending_phone_number, @app_hash
     @sms_verify.instance_variable_set('@cache', @cache)
   end
@@ -66,7 +64,7 @@ class SmsVerifyTest < Minitest::Test
 
   def test_verify_with_phone_with_incorrect_otp
     # Arrange
-    @cache.expect :get, @otp, [String]
+    @cache.expect :get, @otp, [@phone_number]
 
     # Act
     ret = @sms_verify.verify_sms @phone_number, "[#] Use #{@otp+1} as your code for the app!"
