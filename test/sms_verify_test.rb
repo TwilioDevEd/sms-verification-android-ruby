@@ -1,10 +1,10 @@
 require 'minitest/autorun'
+require_relative 'test_helper'
 require File.join(File.dirname(__FILE__), "..", "sms_verify.rb")
 
 
-class SmsVerifyTest < Minitest::Test
-  def initialize(app)
-    super(app)
+describe SmsVerify do
+  before do
     @twilio_client = Minitest::Mock.new
     @twilio_client_messages = Minitest::Mock.new
     @twilio_client_messages.expect :create, nil, [Hash]
@@ -13,89 +13,107 @@ class SmsVerifyTest < Minitest::Test
     @phone_number = '+10123456789'
     @otp = 123456
     @app_hash = 'fake_hash'
-  end
 
-  def setup
     @cache ||= Minitest::Mock.new
     @sms_verify = SmsVerify.new @twilio_client, @sending_phone_number, @app_hash
-    @sms_verify.instance_variable_set('@cache', @cache)
+    @sms_verify.logger = Logger.new(StringIO.new)
   end
 
-  def test_generate_one_time_code
-    assert_match /^\d{6}$/, @sms_verify.generate_one_time_code.to_s
+  describe '#generate_one_time_code' do
+    it 'generates a random number' do
+      @sms_verify.generate_one_time_code.must_be_kind_of Integer
+      @sms_verify.generate_one_time_code.to_s.size.must_equal 6
+    end
   end
 
-  def test_request
-    # Arrange
-    @cache.expect :set, nil, [String, Integer, Hash]
+  describe '#request' do
+    it 'creates and sends a twilio message' do
+      # Act
+      @sms_verify.request @phone_number
 
-    # Act
-    @sms_verify.request @phone_number
-
-    # Assert
-    @twilio_client.verify
-    @twilio_client_messages.verify
-    @cache.verify
+      # Expect
+      @twilio_client.verify
+      @twilio_client_messages.verify
+    end
   end
 
-  def test_verify_phone_without_otp
-    # Arrange
-    @cache.expect :get, nil, [String]
+  describe '#verify_sms' do
+    describe 'when code has *not* been requested' do
+      it 'returns false' do
+        # Act
+        ret = @sms_verify.verify_sms @phone_number, 'fake'
 
-    # Act
-    ret = @sms_verify.verify_sms @phone_number, 'fake'
+        # Expect
+        ret.must_be_falsey
+      end
+    end
 
-    # Assert
-    refute ret
-    @cache.verify
+    describe 'when code was already requested' do
+      before do
+        @sms_verify.stub :generate_one_time_code, @otp do
+          @sms_verify.request @phone_number
+        end
+      end
+
+      describe 'when sms code matches requested code' do
+        it 'returns true' do
+          #Act
+          ret = @sms_verify.verify_sms @phone_number, "[#] Use #{@otp} as your code for the app!"
+
+          # Expect
+          ret.must_be_truthy
+        end
+      end
+
+      describe 'when sms code does *not* match requested code' do
+        it 'returns false' do
+          # Act
+          ret = @sms_verify.verify_sms @phone_number, "[#] Use #{@otp+1} as your code for the app!"
+
+          # Expect
+          ret.must_be_falsey
+        end
+      end
+    end
   end
 
-  def test_verify_phone_with_otp
-    # Arrange
-    @cache.expect :get, @otp, [String]
+  describe '#reset' do
+    describe 'when code has *not* been requested' do
+      it 'returns false' do
+        # Act
+        ret = @sms_verify.reset @phone_number
 
-    # Act
-    ret = @sms_verify.verify_sms @phone_number, "[#] Use #{@otp} as your code for the app!"
+        # Expect
+        ret.must_be_falsey
+      end
+    end
 
-    # Assert
-    assert ret
-    @cache.verify
-  end
+    describe 'when code was already requested' do
+      before do
+        @sms_verify.stub :generate_one_time_code, @otp do
+          @sms_verify.request @phone_number
+        end
+      end
 
-  def test_verify_with_phone_with_incorrect_otp
-    # Arrange
-    @cache.expect :get, @otp, [@phone_number]
+      it 'returns true' do
+        # Act
+        ret = @sms_verify.reset @phone_number
 
-    # Act
-    ret = @sms_verify.verify_sms @phone_number, "[#] Use #{@otp+1} as your code for the app!"
+        # Expect
+        ret.must_be_truthy
+      end
 
-    # Assert
-    refute ret
-    @cache.verify
-  end
+      describe 'if code has already been reset' do
+        it 'returns false' do
+          # Act
+          ret_before = @sms_verify.reset @phone_number
+          ret_after = @sms_verify.reset @phone_number
 
-  def test_reset_phone_without_otp
-    # Arrange
-    @cache.expect :get, nil, [String]
-
-    # Act
-    ret = @sms_verify.reset @phone_number
-
-    # Assert
-    refute ret
-    @cache.verify
-  end
-
-  def test_reset_phone_with_otp
-    # Arrange
-    @cache.expect :get, @otp, [String]
-    @cache.expect :unset, nil, [String]
-
-    # Act
-    ret = @sms_verify.reset @phone_number
-
-    # Assert
-    assert ret
-    @cache.verify
+          # Expect
+          ret_before.must_be_truthy
+          ret_after.must_be_falsey
+        end
+      end
+    end
   end
 end

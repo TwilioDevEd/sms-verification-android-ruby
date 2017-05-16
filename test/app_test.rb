@@ -1,14 +1,11 @@
-ENV['RACK_ENV'] = 'test'
-ENV['CLIENT_SECRET'] = 'secret'
-
 require 'minitest/autorun'
 require 'minitest-assert-json-equal'
+require_relative 'test_helper'
 require 'rack/test'
 require File.join(File.dirname(__FILE__), "..", "app.rb")
 
-describe SmsVerification do
+describe SmsVerification::App do
   include Rack::Test::Methods
-  String.infect_an_assertion :assert_json_equal, :must_equal_json
 
   def app
     app = SmsVerification::App
@@ -38,19 +35,15 @@ describe SmsVerification do
       end
     end
 
-    describe 'with missing parameter' do
-      it 'responds with status code 400' do
-        # Act
-        post '/api/request', client_secret: 'secret'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
-
-        # Act
-        post '/api/request', phone: '+15550421337'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
+    { client_secret: 'secret', phone: '+15550421337' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/request', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'Both client_secret and phone are required.'
+        end
       end
     end
 
@@ -89,25 +82,15 @@ describe SmsVerification do
       end
     end
 
-    describe 'with missing parameter' do
-      it 'responds with status code 400' do
-        # Act
-        post '/api/verify', client_secret: 'secret'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
-
-        # Act
-        post '/api/verify', phone: '+15550421337'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
-
-        # Act
-        post '/api/verify', sms_message: 'fake sms'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+    { client_secret: 'secret', phone: '+15550421337', sms_message: 'fake sms' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/verify', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+        end
       end
     end
 
@@ -168,19 +151,15 @@ describe SmsVerification do
       end
     end
 
-    describe 'with missing parameter' do
-      it 'responds with status code 400' do
-        # Act
-        post '/api/reset', client_secret: 'secret'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
-
-        # Act
-        post '/api/reset', phone: '+15550421337'
-        # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
+    { client_secret: 'secret', phone: '+15550421337' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/reset', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'Both client_secret and phone are required.'
+        end
       end
     end
 

@@ -17,7 +17,7 @@ module SmsVerification
       set :dump_errors, false
       set :show_exceptions, false
       set :root, File.dirname(__FILE__)
-      use Rack::Parser, :parsers => { 'application/json' => proc { |data| JSON.parse data } }
+      use Rack::Parser, parsers: { 'application/json' => -> (data) { JSON.parse data } }
     end
 
     # Initialize the Twilio Client
@@ -97,7 +97,7 @@ module SmsVerification
       if @@sms_verify.reset(phone)
         json success: true, phone: phone
       else
-        json success: false, 
+        json success: false,
              message: 'Unable to reset code for this phone number'
       end
     end
