@@ -1,4 +1,5 @@
 require 'mini_cache'
+require 'logger'
 
 class SmsVerify
   attr_reader :cache, :twilio_client, :sender_phone_number, :app_hash, :expiration_interval

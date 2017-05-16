@@ -7,23 +7,17 @@ require File.join(File.dirname(__FILE__), "..", "app.rb")
 describe SmsVerification::App do
   include Rack::Test::Methods
 
-  def app
-    app = SmsVerification::App
-
-    sms_verify = Minitest::Mock.new
-    sms_verify.expect :request, nil, [String]
-    if defined? @verify_sms_returns
-      sms_verify.expect :verify_sms, @verify_sms_returns, [String, String]
-    end
-    if defined? @reset_returns
-      sms_verify.expect :reset, @reset_returns, [String]
-    end
-    sms_verify.expect :expiration_interval, 900
-    app.class_variable_set('@@sms_verify', sms_verify)
-    return app
+  let(:sms_verify) { Minitest::Mock.new }
+  let(:app) do
+    SmsVerification::App.tap { |app| app.class_variable_set('@@sms_verify', sms_verify) }
   end
 
   describe 'POST /api/request' do
+    before do
+      sms_verify.expect :request, nil, [String]
+      sms_verify.expect :expiration_interval, 900
+    end
+
     describe 'without parameters' do
       it 'responds with status code 400' do
         # Act
@@ -107,14 +101,19 @@ describe SmsVerification::App do
     end
 
     describe 'with correct parameters' do
-      describe 'when sms message was successfully verified' do
-        it 'responds successfully' do
-          # Arrange
-          @verify_sms_returns = true
+      let(:phone_number) { '+15550421337'}
+      let(:sms_message) { 'fake sms'}
 
+      before do
+        sms_verify.expect :verify_sms, verify_sms_returns, [phone_number, sms_message]
+      end
+
+      describe 'when sms message was successfully verified' do
+        let(:verify_sms_returns) { true }
+
+        it 'responds successfully' do
           # Act
-          post '/api/verify', client_secret: 'secret', phone: '+15550421337',
-            sms_message: 'fake sms'
+          post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
 
           # Expect
           last_response.must_be :ok?
@@ -123,13 +122,11 @@ describe SmsVerification::App do
       end
 
       describe 'when sms message could *not* be verified' do
-        it 'responds successfully with error message' do
-          # Arrange
-          @verify_sms_returns = false
+        let(:verify_sms_returns) { false }
 
+        it 'responds successfully with error message' do
           # Act
-          post '/api/verify', client_secret: 'secret', phone: '+15550421337',
-            sms_message: 'fake sms'
+          post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
 
           # Expect
           last_response.must_be :ok?
@@ -175,27 +172,31 @@ describe SmsVerification::App do
     end
 
     describe 'with correct parameters' do
-      describe 'when sms message was successfully reset' do
-        it 'responds successfully' do
-          # Arrange
-          @reset_returns = true
+      let(:phone_number) { '+15550421337'}
 
+      before do
+        sms_verify.expect :reset, reset_returns, [phone_number]
+      end
+
+      describe 'when sms message was successfully reset' do
+        let(:reset_returns) { true }
+
+        it 'responds successfully' do
           # Act
-          post '/api/reset', client_secret: 'secret', phone: '+15550421337'
+          post '/api/reset', client_secret: 'secret', phone: phone_number
 
           # Expect
           last_response.must_be :ok?
-          last_response.body.must_equal_json({success: true, phone: '+15550421337'}.to_json)
+          last_response.body.must_equal_json({success: true, phone: phone_number}.to_json)
         end
       end
 
       describe 'when sms message could *not* be reset' do
-        it 'responds successfully with error message' do
-          # Arrange
-          @reset_returns = false
+        let(:reset_returns) { false }
 
+        it 'responds successfully with error message' do
           # Act
-          post '/api/reset', client_secret: 'secret', phone: '+15550421337'
+          post '/api/reset', client_secret: 'secret', phone: phone_number
 
           # Expect
           last_response.must_be :ok?
