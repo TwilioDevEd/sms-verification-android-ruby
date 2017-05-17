@@ -19,6 +19,8 @@ GEM
       rack
     rack-protection (2.0.0)
       rack
+    rack-test (0.6.3)
+      rack (>= 1.0)
     rake (12.0.0)
     sinatra (2.0.0)
       mustermann (~> 1.0)
@@ -47,6 +49,7 @@ DEPENDENCIES
   minitest
   minitest-assert-json-equal
   rack-parser
+  rack-test
   rake
   sinatra
   sinatra-contrib

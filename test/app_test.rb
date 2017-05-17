@@ -1,198 +1,208 @@
-ENV['RACK_ENV'] = 'test'
-
 require 'minitest/autorun'
 require 'minitest-assert-json-equal'
+require_relative 'test_helper'
 require 'rack/test'
 require File.join(File.dirname(__FILE__), "..", "app.rb")
 
-
-class SmsVerificationTest < Minitest::Test
+describe SmsVerification::App do
   include Rack::Test::Methods
 
-  def app
-    app = SmsVerification::App
+  let(:sms_verify) { Minitest::Mock.new }
+  let(:app) do
+    SmsVerification::App.tap { |app| app.class_variable_set('@@sms_verify', sms_verify) }
+  end
 
-    sms_verify = Minitest::Mock.new
-    sms_verify.expect :request, nil, [String]
-    if defined? @verify_sms_returns
-      sms_verify.expect :verify_sms, @verify_sms_returns, [String, String]
+  describe 'POST /api/request' do
+    before do
+      sms_verify.expect :request, nil, [String]
+      sms_verify.expect :expiration_interval, 900
     end
-    if defined? @reset_returns
-      sms_verify.expect :reset, @reset_returns, [String]
+
+    describe 'without parameters' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/request'
+
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'Both client_secret and phone are required.'
+      end
     end
-    sms_verify.expect :expiration_interval, 900
-    app.class_variable_set('@@sms_verify', sms_verify)
-    return app
+
+    { client_secret: 'secret', phone: '+15550421337' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/request', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'Both client_secret and phone are required.'
+        end
+      end
+    end
+
+    describe 'with invalid secret' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/request', client_secret: 'lol', phone: '+15550421337'
+
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'The client_secret parameter does not match.'
+      end
+    end
+
+    describe 'with correct parameters' do
+      it 'responds successfully' do
+        # Act
+        post '/api/request', client_secret: 'secret', phone: '+15550421337'
+
+        # Expect
+        last_response.must_be :ok?
+        last_response.body.must_equal_json({success: true, time: 900}.to_json)
+      end
+    end
   end
 
-  #
-  # Test Route : /api/request
-  #
-  def test_request_code_without_parameter
-    # Act
-    post '/api/request'
+  describe 'POST /api/verify' do
+    describe 'without parameters' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/verify'
 
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+      end
+    end
+
+    { client_secret: 'secret', phone: '+15550421337', sms_message: 'fake sms' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/verify', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+        end
+      end
+    end
+
+    describe 'with invalid secret' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/verify', client_secret: 'lol', phone: '+15550421337',
+          sms_message: 'fake sms'
+
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'The client_secret parameter does not match.'
+      end
+    end
+
+    describe 'with correct parameters' do
+      let(:phone_number) { '+15550421337'}
+      let(:sms_message) { 'fake sms'}
+
+      before do
+        sms_verify.expect :verify_sms, verify_sms_returns, [phone_number, sms_message]
+      end
+
+      describe 'when sms message was successfully verified' do
+        let(:verify_sms_returns) { true }
+
+        it 'responds successfully' do
+          # Act
+          post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
+
+          # Expect
+          last_response.must_be :ok?
+          last_response.body.must_equal_json({success: true, phone: '+15550421337'}.to_json)
+        end
+      end
+
+      describe 'when sms message could *not* be verified' do
+        let(:verify_sms_returns) { false }
+
+        it 'responds successfully with error message' do
+          # Act
+          post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
+
+          # Expect
+          last_response.must_be :ok?
+          last_response.body.must_equal_json({success: false, message: 'Unable to validate code for this phone number'}.to_json)
+        end
+      end
+    end
   end
 
-  def test_request_code_with_missing_parameter
-    # Act
-    post '/api/request', client_secret: 'secret'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
+  describe 'POST /api/reset' do
+    describe 'without parameters' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/reset'
 
-    # Act
-    post '/api/request', phone: '+15550421337'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
-  end
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'Both client_secret and phone are required.'
+      end
+    end
 
-  def test_request_code_with_invalid_secret
-    # Act
-    post '/api/request', client_secret: 'lol', phone: '+15550421337'
+    { client_secret: 'secret', phone: '+15550421337' }.each do |key, value|
+      describe 'when only #{key} is sent' do
+        it 'responds with status code 400' do
+          # Act
+          post '/api/reset', { key => value }
+          # Expect
+          last_response.status.must_equal 400
+          last_response.body.must_equal 'Both client_secret and phone are required.'
+        end
+      end
+    end
 
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret parameter does not match.', last_response.body
-  end
+    describe 'with invalid secret' do
+      it 'responds with status code 400' do
+        # Act
+        post '/api/reset', client_secret: 'lol', phone: '+15550421337'
 
-  def test_request_code_with_correct_parameter
-    # Act
-    post '/api/request', client_secret: 'secret', phone: '+15550421337'
+        # Expect
+        last_response.status.must_equal 400
+        last_response.body.must_equal 'The client_secret parameter does not match.'
+      end
+    end
 
-    # Assert
-    assert last_response.ok?
-    assert_json_equal last_response.body, {success: true, time: 900}.to_json
-  end
+    describe 'with correct parameters' do
+      let(:phone_number) { '+15550421337'}
 
-  #
-  # Test Route : /api/verify
-  #
-  def test_verify_code_without_parameter
-    # Act
-    post '/api/verify'
+      before do
+        sms_verify.expect :reset, reset_returns, [phone_number]
+      end
 
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
-  end
+      describe 'when sms message was successfully reset' do
+        let(:reset_returns) { true }
 
-  def test_verify_code_with_missing_parameter
-    # Act
-    post '/api/verify', client_secret: 'secret'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
+        it 'responds successfully' do
+          # Act
+          post '/api/reset', client_secret: 'secret', phone: phone_number
 
-    # Act
-    post '/api/verify', phone: '+15550421337'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
+          # Expect
+          last_response.must_be :ok?
+          last_response.body.must_equal_json({success: true, phone: phone_number}.to_json)
+        end
+      end
 
-    # Act
-    post '/api/verify', sms_message: 'fake sms'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret, phone, and sms_message are required.', last_response.body
-  end
+      describe 'when sms message could *not* be reset' do
+        let(:reset_returns) { false }
 
-  def test_verify_code_with_invalid_secret
-    # Act
-    post '/api/verify', client_secret: 'lol', phone: '+15550421337', 
-      sms_message: 'fake sms'
+        it 'responds successfully with error message' do
+          # Act
+          post '/api/reset', client_secret: 'secret', phone: phone_number
 
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret parameter does not match.', last_response.body
-  end
-
-  def test_verify_code_with_correct_parameter
-    # Arrange
-    @verify_sms_returns = true
-
-    # Act
-    post '/api/verify', client_secret: 'secret', phone: '+15550421337', 
-      sms_message: 'fake sms'
-
-    # Assert
-    assert last_response.ok?
-    assert_json_equal last_response.body, {success: true, phone: '+15550421337'}.to_json
-  end
-
-  def test_verify_code_with_incorrect_parameter
-    # Arrange
-    @verify_sms_returns = false
-
-    # Act
-    post '/api/verify', client_secret: 'secret', phone: '+15550421337', 
-      sms_message: 'fake sms'
-
-    # Assert
-    assert last_response.ok?
-    assert_json_equal last_response.body, {success: false, message: 'Unable to validate code for this phone number'}.to_json
-  end
-
-  #
-  # Test Route : /api/reset
-  #
-  def test_reset_code_without_parameter
-    # Act
-    post '/api/reset'
-
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
-  end
-
-  def test_reset_code_with_missing_parameter
-    # Act
-    post '/api/reset', client_secret: 'secret'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
-
-    # Act
-    post '/api/reset', phone: '+15550421337'
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'Both client_secret and phone are required.', last_response.body
-  end
-
-  def test_reset_code_with_invalid_secret
-    # Act
-    post '/api/reset', client_secret: 'lol', phone: '+15550421337'
-
-    # Assert
-    assert_equal 400, last_response.status
-    assert_equal 'The client_secret parameter does not match.', last_response.body
-  end
-
-  def test_reset_code_with_correct_parameter
-    # Arrange
-    @reset_returns = true
-
-    # Act
-    post '/api/reset', client_secret: 'secret', phone: '+15550421337'
-
-    # Assert
-    assert last_response.ok?
-    assert_json_equal last_response.body, {success: true, phone: '+15550421337'}.to_json
-  end
-
-  def test_reset_code_with_incorrect_parameter
-    # Arrange
-    @reset_returns = false
-
-    # Act
-    post '/api/reset', client_secret: 'secret', phone: '+15550421337'
-
-    # Assert
-    assert last_response.ok?
-    assert_json_equal last_response.body, {success: false, message: 'Unable to reset code for this phone number'}.to_json
+          # Expect
+          last_response.must_be :ok?
+          last_response.body.must_equal_json({success: false, message: 'Unable to reset code for this phone number'}.to_json)
+        end
+      end
+    end
   end
 end
