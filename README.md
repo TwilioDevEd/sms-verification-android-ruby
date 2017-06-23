@@ -6,11 +6,11 @@
 
 This sample project demonstrates how to use Twilio's SMS Messaging APIs to
 verify Android application user's phone numbers. This application supports the
-SMS Verifier APIs from Google Play Services TODO: Link
+[SMS Retriever API](https://developers.google.com/identity/sms-retriever/overview) from Google Play Services.
 
 You'll also need to have a sample Android application that you configure to use
 these URLs to verify phone numbers. You can download that application from
-Google here TODO: Link
+its [Google Samples GitHub Repo](https://github.com/googlesamples/android-credentials/tree/master/sms-verification/android).
 
 ## Configure the sample application
 
