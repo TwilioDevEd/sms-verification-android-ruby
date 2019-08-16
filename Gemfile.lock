@@ -2,7 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     backports (3.8.0)
-    dotenv (2.2.1)
+    dotenv (2.7.5)
     faraday (0.12.1)
       multipart-post (>= 1.2, < 3)
     jwt (1.5.6)
