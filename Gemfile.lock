@@ -14,7 +14,7 @@ GEM
     multi_json (1.12.1)
     multipart-post (2.0.0)
     mustermann (1.0.0)
-    rack (2.0.2)
+    rack (2.2.2)
     rack-parser (0.7.0)
       rack
     rack-protection (2.0.0)
