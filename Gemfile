@@ -4,7 +4,7 @@ source 'https://rubygems.org'
 gem 'sinatra'
 gem 'sinatra-contrib'
 gem 'mini_cache'
-gem 'twilio-ruby', '~>5.0.0'
+gem 'twilio-ruby', '~>5.34.0'
 gem 'dotenv'
 gem 'rack-parser', :require => 'rack/parser'
 
