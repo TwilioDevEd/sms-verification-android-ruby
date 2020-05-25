@@ -23,8 +23,8 @@ describe SmsVerify do
 
   describe '#generate_one_time_code' do
     it 'generates a random number' do
-      subject.generate_one_time_code.must_be_kind_of Integer
-      subject.generate_one_time_code.to_s.size.must_equal 6
+      _(subject.generate_one_time_code).must_be_kind_of Integer
+      _(subject.generate_one_time_code.to_s.size).must_equal 6
     end
   end
 
@@ -56,7 +56,7 @@ describe SmsVerify do
         ret = subject.verify_sms phone_number, 'fake'
 
         # Expect
-        ret.must_be_falsey
+        _(ret).must_be_falsey
       end
     end
 
@@ -73,7 +73,7 @@ describe SmsVerify do
           ret = subject.verify_sms phone_number, "[#] Use #{otp} as your code for the app!"
 
           # Expect
-          ret.must_be_truthy
+          _(ret).must_be_truthy
         end
       end
 
@@ -83,7 +83,7 @@ describe SmsVerify do
           ret = subject.verify_sms phone_number, "[#] Use #{otp + 1} as your code for the app!"
 
           # Expect
-          ret.must_be_falsey
+          _(ret).must_be_falsey
         end
       end
     end
@@ -96,7 +96,7 @@ describe SmsVerify do
         ret = subject.reset phone_number
 
         # Expect
-        ret.must_be_falsey
+        _(ret).must_be_falsey
       end
     end
 
@@ -112,7 +112,7 @@ describe SmsVerify do
         ret = subject.reset phone_number
 
         # Expect
-        ret.must_be_truthy
+        _(ret).must_be_truthy
       end
 
       describe 'if code has already been reset' do
@@ -122,8 +122,8 @@ describe SmsVerify do
           ret_after = subject.reset phone_number
 
           # Expect
-          ret_before.must_be_truthy
-          ret_after.must_be_falsey
+          _(ret_before).must_be_truthy
+          _(ret_after).must_be_falsey
         end
       end
     end
