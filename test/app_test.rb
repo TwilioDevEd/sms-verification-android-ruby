@@ -24,8 +24,8 @@ describe SmsVerification::App do
         post '/api/request'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'Both client_secret and phone are required.'
       end
     end
 
@@ -35,8 +35,8 @@ describe SmsVerification::App do
           # Act
           post '/api/request', { key => value }
           # Expect
-          last_response.status.must_equal 400
-          last_response.body.must_equal 'Both client_secret and phone are required.'
+          _(last_response.status).must_equal 400
+          _(last_response.body).must_equal 'Both client_secret and phone are required.'
         end
       end
     end
@@ -47,8 +47,8 @@ describe SmsVerification::App do
         post '/api/request', client_secret: 'lol', phone: '+15550421337'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret parameter does not match.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'The client_secret parameter does not match.'
       end
     end
 
@@ -58,8 +58,8 @@ describe SmsVerification::App do
         post '/api/request', client_secret: 'secret', phone: '+15550421337'
 
         # Expect
-        last_response.must_be :ok?
-        last_response.body.must_equal_json({success: true, time: 900}.to_json)
+        _(last_response).must_be :ok?
+        _(last_response.body).must_equal_json({success: true, time: 900}.to_json)
       end
     end
   end
@@ -71,8 +71,8 @@ describe SmsVerification::App do
         post '/api/verify'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'The client_secret, phone, and sms_message are required.'
       end
     end
 
@@ -82,8 +82,8 @@ describe SmsVerification::App do
           # Act
           post '/api/verify', { key => value }
           # Expect
-          last_response.status.must_equal 400
-          last_response.body.must_equal 'The client_secret, phone, and sms_message are required.'
+          _(last_response.status).must_equal 400
+          _(last_response.body).must_equal 'The client_secret, phone, and sms_message are required.'
         end
       end
     end
@@ -95,8 +95,8 @@ describe SmsVerification::App do
           sms_message: 'fake sms'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret parameter does not match.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'The client_secret parameter does not match.'
       end
     end
 
@@ -116,8 +116,8 @@ describe SmsVerification::App do
           post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
 
           # Expect
-          last_response.must_be :ok?
-          last_response.body.must_equal_json({success: true, phone: '+15550421337'}.to_json)
+          _(last_response).must_be :ok?
+          _(last_response.body).must_equal_json({success: true, phone: '+15550421337'}.to_json)
         end
       end
 
@@ -129,8 +129,8 @@ describe SmsVerification::App do
           post '/api/verify', client_secret: 'secret', phone: phone_number, sms_message: sms_message
 
           # Expect
-          last_response.must_be :ok?
-          last_response.body.must_equal_json({success: false, message: 'Unable to validate code for this phone number'}.to_json)
+          _(last_response).must_be :ok?
+          _(last_response.body).must_equal_json({success: false, message: 'Unable to validate code for this phone number'}.to_json)
         end
       end
     end
@@ -143,8 +143,8 @@ describe SmsVerification::App do
         post '/api/reset'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'Both client_secret and phone are required.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'Both client_secret and phone are required.'
       end
     end
 
@@ -154,8 +154,8 @@ describe SmsVerification::App do
           # Act
           post '/api/reset', { key => value }
           # Expect
-          last_response.status.must_equal 400
-          last_response.body.must_equal 'Both client_secret and phone are required.'
+          _(last_response.status).must_equal 400
+          _(last_response.body).must_equal 'Both client_secret and phone are required.'
         end
       end
     end
@@ -166,8 +166,8 @@ describe SmsVerification::App do
         post '/api/reset', client_secret: 'lol', phone: '+15550421337'
 
         # Expect
-        last_response.status.must_equal 400
-        last_response.body.must_equal 'The client_secret parameter does not match.'
+        _(last_response.status).must_equal 400
+        _(last_response.body).must_equal 'The client_secret parameter does not match.'
       end
     end
 
@@ -186,8 +186,8 @@ describe SmsVerification::App do
           post '/api/reset', client_secret: 'secret', phone: phone_number
 
           # Expect
-          last_response.must_be :ok?
-          last_response.body.must_equal_json({success: true, phone: phone_number}.to_json)
+          _(last_response).must_be :ok?
+          _(last_response.body).must_equal_json({success: true, phone: phone_number}.to_json)
         end
       end
 
@@ -199,8 +199,8 @@ describe SmsVerification::App do
           post '/api/reset', client_secret: 'secret', phone: phone_number
 
           # Expect
-          last_response.must_be :ok?
-          last_response.body.must_equal_json({success: false, message: 'Unable to reset code for this phone number'}.to_json)
+          _(last_response).must_be :ok?
+          _(last_response.body).must_equal_json({success: false, message: 'Unable to reset code for this phone number'}.to_json)
         end
       end
     end
