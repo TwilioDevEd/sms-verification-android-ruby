@@ -15,7 +15,6 @@ describe SmsVerification::App do
   describe 'POST /api/request' do
     before do
       sms_verify.expect :request, nil, [String]
-      sms_verify.expect :expiration_interval, 900
     end
 
     describe 'without parameters' do
@@ -59,7 +58,7 @@ describe SmsVerification::App do
 
         # Expect
         _(last_response).must_be :ok?
-        _(last_response.body).must_equal_json({success: true, time: 900}.to_json)
+        _(last_response.body).must_equal_json({success: true}.to_json)
       end
     end
   end
