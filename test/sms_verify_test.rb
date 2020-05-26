@@ -21,12 +21,6 @@ describe SmsVerify do
     subject.logger = Logger.new(StringIO.new)
   end
 
-  describe '#generate_one_time_code' do
-    it 'generates a random number' do
-      _(subject.generate_one_time_code).must_be_kind_of Integer
-      _(subject.generate_one_time_code.to_s.size).must_equal 6
-    end
-  end
 
   describe '#request' do
     let(:twilio_options) do

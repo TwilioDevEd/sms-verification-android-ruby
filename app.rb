@@ -22,13 +22,15 @@ module SmsVerification
 
     # Initialize the Twilio Client
     @@twilio_client = Twilio::REST::Client.new(
-      Config.twilio_account_sid,
-      Config.twilio_auth_token
+      Config.twilio_api_key,
+      Config.twilio_api_secret,
+      Config.twilio_account_sid
     )
 
     @@sms_verify = SmsVerify.new(
       @@twilio_client,
-      Config.sending_phone_number,
+      Config.verification_service_sid,
+      Config.country_code,
       Config.app_hash
     )
 
@@ -52,7 +54,7 @@ module SmsVerification
 
       @@sms_verify.request(phone)
 
-      json success: true, time: @@sms_verify.expiration_interval
+      json success: true
     end
 
     post '/api/verify' do
