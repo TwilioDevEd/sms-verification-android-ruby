@@ -5,127 +5,57 @@ require File.join(File.dirname(__FILE__), "..", "sms_verify.rb")
 
 
 describe SmsVerify do
-  let(:otp) { 123456 }
-  let(:sending_phone_number) { '+15550005555' }
-  let(:phone_number) { '+10123456789' }
+  let(:phone_number) { '1234567890' }
   let(:app_hash) { 'fake_hash' }
+  let(:verification_service_sid) { 'VAXXX'}
+  let(:country_code) { 'XX'}
   let(:twilio_client) { Minitest::Mock.new }
-  let(:twilio_client_messages) { Minitest::Mock.new }
-  let(:twilio_options) { Hash }
+  let(:lookup_number) { Minitest::Mock.new }
+  let(:twilio_client_lookup) { Minitest::Mock.new }
+  let(:twilio_client_lookups) { Minitest::Mock.new }
+  let(:twilio_verify) { Minitest::Mock.new}
+  let(:verify_service) { Minitest::Mock.new}
+  let(:verification) { Minitest::Mock.new}
+  let(:twilio_client_verifications) { Minitest::Mock.new }
+  let(:lookup_options) { Hash }
+  let(:verify_options) { Hash }
 
-  subject { SmsVerify.new twilio_client, sending_phone_number, app_hash }
+  subject { SmsVerify.new twilio_client, verification_service_sid, country_code, app_hash }
 
   before do
-    twilio_client_messages.expect :create, nil, [twilio_options]
-    twilio_client.expect :messages, twilio_client_messages
+    lookup_number.expect :phone_number, phone_number
+    twilio_client_lookup.expect :fetch, lookup_number, [lookup_options]
+    twilio_client_lookups.expect :phone_numbers, twilio_client_lookup, [phone_number]
+
+    twilio_client.expect :lookups, twilio_client_lookups
+
     subject.logger = Logger.new(StringIO.new)
   end
 
-  describe '#generate_one_time_code' do
-    it 'generates a random number' do
-      _(subject.generate_one_time_code).must_be_kind_of Integer
-      _(subject.generate_one_time_code.to_s.size).must_equal 6
-    end
-  end
-
   describe '#request' do
-    let(:twilio_options) do
+    let(:lookup_options) do
       {
-        to: phone_number,
-        from: sending_phone_number,
-        body: "[#] Use 123456 as your code for the app!\n fake_hash"
+        country_code: country_code
       }
     end
-
-    it 'creates and sends a twilio message' do
+    let(:verify_options) do
+      {
+        to: phone_number,
+        channel: 'sms',
+        app_hash: app_hash
+      }
+    end
+    it 'does a lookup on the phone number' do
       # Act
-      subject.stub :generate_one_time_code, otp do
-        subject.request phone_number
-      end
+      subject.request phone_number
+      
 
       # Expect
+      lookup_number.verify
+      twilio_client_lookup.verify
+      twilio_client_lookups.verify
       twilio_client.verify
-      twilio_client_messages.verify
     end
   end
 
-  describe '#verify_sms' do
-    describe 'when code has *not* been requested' do
-      it 'returns false' do
-        # Act
-        ret = subject.verify_sms phone_number, 'fake'
-
-        # Expect
-        _(ret).must_be_falsey
-      end
-    end
-
-    describe 'when code was already requested' do
-      before do
-        subject.stub :generate_one_time_code, otp do
-          subject.request phone_number
-        end
-      end
-
-      describe 'when sms code matches requested code' do
-        it 'returns true' do
-          #Act
-          ret = subject.verify_sms phone_number, "[#] Use #{otp} as your code for the app!"
-
-          # Expect
-          _(ret).must_be_truthy
-        end
-      end
-
-      describe 'when sms code does *not* match requested code' do
-        it 'returns false' do
-          # Act
-          ret = subject.verify_sms phone_number, "[#] Use #{otp + 1} as your code for the app!"
-
-          # Expect
-          _(ret).must_be_falsey
-        end
-      end
-    end
-  end
-
-  describe '#reset' do
-    describe 'when code has *not* been requested' do
-      it 'returns false' do
-        # Act
-        ret = subject.reset phone_number
-
-        # Expect
-        _(ret).must_be_falsey
-      end
-    end
-
-    describe 'when code was already requested' do
-      before do
-        subject.stub :generate_one_time_code, otp do
-          subject.request phone_number
-        end
-      end
-
-      it 'returns true' do
-        # Act
-        ret = subject.reset phone_number
-
-        # Expect
-        _(ret).must_be_truthy
-      end
-
-      describe 'if code has already been reset' do
-        it 'returns false' do
-          # Act
-          ret_before = subject.reset phone_number
-          ret_after = subject.reset phone_number
-
-          # Expect
-          _(ret_before).must_be_truthy
-          _(ret_after).must_be_falsey
-        end
-      end
-    end
-  end
 end

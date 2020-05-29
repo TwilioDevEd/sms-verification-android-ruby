@@ -28,10 +28,12 @@ You will need all of these values before you continue.
 | Config Value  | Description |
 | :-------------  |:------------- |
 `TWILIO_ACCOUNT_SID` | Your primary Twilio account identifier - find this [in the console here](https://www.twilio.com/console).
-`TWILIO_AUTH_TOKEN` | Used to authenticate - [just like the above, you'll get one here](https://www.twilio.com/console).
-`SENDING_PHONE_NUMBER` | This phone number will be sending the SMS messages to the Android device. Either use a phone number you purchased through Twilio, or one you have verified with your account.
-`APP_HASH` | Matches the Android application to the SMS message - get this from the Settings menu item in the Android application.
+`TWILIO_API_KEY` | Used to authenticate - [generate one here](https://www.twilio.com/console/dev-tools/api-keys).
+`TWILIO_API_SECRET` | Used to authenticate - [just like the above, you'll get one here](https://www.twilio.com/console/dev-tools/api-keys).
+`APP_HASH` | Matches the Android application to the SMS message - See Google's documentation on how to [Compute your app's hash string](https://developers.google.com/identity/sms-retriever/verify#computing_your_apps_hash_string).
 `CLIENT_SECRET` | Matches the Android application to the server - you can set this in the `strings.xml` file in your Android application. It must match the server's config value. You can also override it in the Settings menu of the app.
+`VERIFICATION_SERVICE_SID` | This project uses Twilio Verify to send verification codes and to check their status - [create a service here](https://www.twilio.com/console/verify/services).
+`COUNTRY_CODE` | Twilio Verify requires E.164 formatted phone numbers. This project uses Twilio Lookup to convert phone numbers into the expected format, based on the country for the phone number (Example: US). Find your [ISO country codes here](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)
 
 ## Run the sample application
 

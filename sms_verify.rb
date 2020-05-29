@@ -1,73 +1,85 @@
-require 'mini_cache'
 require 'logger'
 
 class SmsVerify
-  attr_reader :cache, :twilio_client, :sender_phone_number, :app_hash, :expiration_interval
+  attr_reader :twilio_client, :verification_service_sid, :country_code, :app_hash
   attr_accessor :logger
 
-  def initialize(twilio_client, sender_phone_number, app_hash, expiration_interval = 900)
-    @cache = MiniCache::Store.new
+  def initialize(twilio_client, verification_service_sid, country_code, app_hash)
     @twilio_client = twilio_client
-    @sender_phone_number = sender_phone_number
+    @verification_service_sid = verification_service_sid
+    @country_code = country_code
     @app_hash = app_hash
-    @expiration_interval = expiration_interval
   end
 
   def logger
     @logger ||= Logger.new(STDOUT)
   end
 
-  def generate_one_time_code
-    code_length = 6
-    pow = 10 ** (code_length - 1)
-    (Random.rand() * pow).ceil + pow
+
+  def get_e164_number(phone)
+    phone_number = @twilio_client.lookups
+      .phone_numbers(phone)
+      .fetch(country_code: @country_code)
+
+    return phone_number.phone_number
   end
 
+
   def request(phone)
-    logger.info "Requesting SMS to be sent to #{phone}"
+    logger.info "Requesting SMS to be sent to #{phone} with #{app_hash}"
 
-    otp = generate_one_time_code()
+    formatted_phone = get_e164_number(phone)
 
-    @cache.set(phone, otp, expires_in: @expiration_interval)
-
-    sms_message = "[#] Use #{otp} as your code for the app!\n #{app_hash}"
-    logger.info sms_message
-
-    twilio_client.messages.create(
-      to: phone,
-      from: sender_phone_number,
-      body: sms_message
-    )
+    begin
+      verification = @twilio_client.verify
+                      .services(@verification_service_sid)
+                      .verifications
+                      .create(to: formatted_phone, 
+                        channel: 'sms',
+                        app_hash: @app_hash
+                      )
+      logger.info "Sent verification #{verification.sid}"
+    rescue => error
+      logger.warn error.inspect
+      return
+    end
   end
 
   def verify_sms(phone, sms_message)
     logger.info "Verifying #{phone}: #{sms_message}"
-    otp = @cache.get(phone)
+    
+    formatted_phone = get_e164_number(phone)
 
-    unless otp
-      logger.warn "No cached otp value found for phone: #{phone}"
+    # This regexp finds the numeric code in the message
+    code = /(\d+{5,7})/.match(sms_message)
+
+    unless code
+      logger.warn "No code found in the sms message"
+      return false
+    end
+    begin
+      verification_check = @twilio_client.verify
+                            .services(@verification_service_sid)
+                            .verification_checks
+                            .create(to: formatted_phone, code: code)
+    rescue => error
+      logger.warn error.inspect
       return false
     end
 
-    if (sms_message.include? otp.to_s)
-      logger.info 'Found otp value in cache'
+    if verification_check.status == 'approved'
+      logger.info 'Verification was approved by Verify'
       return true
+    else
+      logger.warn 'Mismatch between sms message code and Verify code'
+      return false
     end
-
-    logger.warn 'Mismatch between otp value found and otp value expected'
-    false
   end
 
   def reset(phone)
     logger.info "Resetting code for: #{phone}"
-    otp = @cache.get(phone)
+    # This method is not necessary with Twilio Verify
 
-    if (otp == nil)
-      logger.warn "No cached otp value found for phone: #{phone}"
-      return false
-    end
-
-    @cache.unset(phone)
     true
   end
 end
