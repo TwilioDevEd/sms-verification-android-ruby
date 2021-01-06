@@ -7,7 +7,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     jwt (2.2.1)
     mini_portile2 (2.4.0)
-    minitest (5.14.1)
+    minitest (5.14.3)
     minitest-assert-json-equal (0.2.1)
       minitest (~> 5.0)
     multi_json (1.14.1)
