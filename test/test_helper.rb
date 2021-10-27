@@ -1,4 +1,5 @@
 ENV['RACK_ENV'] = 'test'
+ENV['APP_ENV'] = 'test'
 ENV['CLIENT_SECRET'] = 'secret'
 
 require 'minitest/autorun'

@@ -7,7 +7,13 @@ require 'rack/parser'
 require_relative 'config_wrapper'
 require_relative 'sms_verify'
 
-ENV['RACK_ENV'] ||= 'development'
+# Load environment configuration
+Dotenv.load
+
+# Set the environment after dotenv loads
+# Default to production
+environment = (ENV['APP_ENV'] || ENV['RACK_ENV'] || :production).to_sym
+set :environment, environment
 
 module SmsVerification
   class App < Sinatra::Base
