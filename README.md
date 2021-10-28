@@ -54,6 +54,14 @@ Your application should now be running at [http://localhost:3000/](http://localh
 
 Check your config values, and then make sure everything looks good.
 
+### Configure Development vs Production Settings
+
+By default, this application will run in production mode - stack traces will not be visible in the web browser. If you would like to run this application in development locally, change the `APP_ENV` variable in your `.env` file.
+
+`APP_ENV=development`
+
+For more about development vs production, visit [Sinatra's configuration page](http://sinatrarb.com/configuration.html).
+
 ## Running the server with ngrok
 
 Your phone won't be able to access localhost directly. You'll need to create a
