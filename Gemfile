@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 source 'https://rubygems.org'
 
-gem 'sinatra'
-gem 'sinatra-contrib'
+gem 'sinatra', '>= 2.2.0'
+gem 'sinatra-contrib', '>= 2.2.0'
 gem 'twilio-ruby', '~>5.35.0'
 gem 'dotenv'
 gem 'rack-parser', :require => 'rack/parser'
