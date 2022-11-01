@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 
 gem 'sinatra'
 gem 'sinatra-contrib'
-gem 'twilio-ruby', '~>5.35.0'
+gem 'twilio-ruby', '~>5.73.1'
 gem 'dotenv'
 gem 'rack-parser', :require => 'rack/parser'
 
